@@ -1,6 +1,6 @@
 
 <div class="fs-container">
-  <app-osm-map [layers]="layers"
+  <app-osm-map 
   (map$)="receiveMap($event)"
   (zoom$)="receiveZoom($event)"
   id='main-map'

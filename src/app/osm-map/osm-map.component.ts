@@ -8,7 +8,6 @@ import * as L from 'leaflet';
   styleUrls: ['./osm-map.component.css',]
 })
 export class OsmMapComponent implements OnInit, OnDestroy {
-  @Input() layers: Layer[];
   @Output() map$: EventEmitter<Map> = new EventEmitter;
   @Output() zoom$: EventEmitter<number> = new EventEmitter;
   @Input() options: MapOptions= {
