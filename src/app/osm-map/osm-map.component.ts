@@ -1,19 +1,6 @@
-/// <reference types='leaflet-loading' />
-/// <reference types='leaflet-fullscreen' /> 
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
-import { Map, Control, DomUtil, ZoomAnimEvent , Layer, LoadingOptions, MapOptions, fullscreenOptions } from 'leaflet';
+import { Map, Control, DomUtil, ZoomAnimEvent , Layer, MapOptions, tileLayer, latLng } from 'leaflet';
 import * as L from 'leaflet';
-import {PreferencesService} from '../preferences.service';
-
-declare module 'leaflet' {
-  interface Control {
-     _addTo(map: Map): Control;
-  }
-  interface Map {
-    _leaflet_id: number;
-    _container: HTMLElement;
-  }
-}
 
 @Component({
   selector: 'app-osm-map',
@@ -24,68 +11,23 @@ export class OsmMapComponent implements OnInit, OnDestroy {
   @Input() layers: Layer[];
   @Output() map$: EventEmitter<Map> = new EventEmitter;
   @Output() zoom$: EventEmitter<number> = new EventEmitter;
-  public options: MapOptions;
+  @Input() options: MapOptions= {
+                      layers:[tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        opacity: 0.7,
+                        maxZoom: 19,
+                        detectRetina: true,
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      })],
+                      zoom:1,
+                      center:latLng(0,0)
+  };
   public map: Map;
   public zoom: number;
-  public fullscreenOptions: fullscreenOptions= {
-    position: 'topleft',
-    title: {true:'Exit Fullscreen',
-            false: 'View Fullscreen',
-            }
-  };
-  public loadingOptions: LoadingOptions={
-    position: 'topleft',
-  }
 
-  constructor(private preferences: PreferencesService) { 
+  constructor() { 
   }
 
   ngOnInit() {
-    this.options = {
-      layers: this.layers,
-      zoom: this.preferences.startZoom,
-      center: this.preferences.startLatLng,
-    };
-
-    // Use a compact attribution control for small map container widths
-    if (! Control.Attribution.prototype._addTo) {
-    Control.Attribution.prototype._addTo = Control.Attribution.prototype.addTo;
-
-    Control.Attribution.prototype.addTo = function(map) {
-      Control.Attribution.prototype._addTo.call(this, map);
-
-      // use the css checkbox hack to toggle the attribution
-      const parent     = this._container.parentNode;
-      const checkbox   = document.createElement('input');
-      const label      = document.createElement('label');
-      const checkboxId = 'attribution-toggle-' + map._leaflet_id;  // unique name if multiple maps are present
-
-      checkbox.setAttribute('id', checkboxId);
-      checkbox.setAttribute('type', 'checkbox');
-      checkbox.classList.add('leaflet-compact-attribution-toggle');
-      parent.insertBefore(checkbox, parent.firstChild);
-
-      label.setAttribute('for', checkboxId);
-      label.classList.add('leaflet-control');
-      label.classList.add('leaflet-compact-attribution-label');
-      parent.appendChild(label);
-
-      // initial setup for map load
-      if (map._container.offsetWidth <= 600) {
-        DomUtil.addClass(this._container, 'leaflet-compact-attribution');
-      }
-
-      // update on map resize
-      map.on('resize', function() {
-        if (map._container.offsetWidth > 600) {
-          DomUtil.removeClass(this._container, 'leaflet-compact-attribution');
-        } else {
-          DomUtil.addClass(this._container, 'leaflet-compact-attribution');
-        }
-      }, this);
-      return this;
-    };
-    }
   }
 
   ngOnDestroy() {
